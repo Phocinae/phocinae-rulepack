@@ -1,0 +1,8 @@
+﻿# Corpus sha256 values are computed over LF bytes. If git rewrites line endings
+# on checkout, every pack fails validation on a fresh clone for a reason that has
+# nothing to do with its content. Normalise everything to LF, always.
+* text=auto eol=lf
+*.whl binary
+*.tar.gz binary
+*.png binary
+*.gif binary

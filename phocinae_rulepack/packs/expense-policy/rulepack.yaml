@@ -1,0 +1,179 @@
+schema: phocinae-rulepack/v1
+id: expense-policy
+title: Expense pre-approval policy check (the rule kernel behind the S15(gallery) demo)
+version: 0.1.0
+scenario: S15
+description: |
+  Read a ledger of expense claims, apply one version of the expense policy, and
+  emit only the differences for a human to review. It reaches no compliance
+  conclusion and makes no model calls.
+
+  Provenance: the S15(gallery) measurement (rules 14/14, zero model calls). The
+  policy constants and the original rule function are excerpted byte-for-byte
+  into sources/.
+
+  Naming warning: "S15" here means the gallery's S15 "expense pre-approval"
+  demo. In the 182-scenario inventory, S15 is a different thing entirely
+  (multilingual low-resource expansion). They are not the same scenario.
+missing_field_policy: review
+input_schema:
+  type: object
+  required: [amount, category, receipt_attached, prior_approval]
+  properties:
+    id: {type: string}
+    amount: {type: number}
+    category: {type: string}
+    receipt_attached: {type: boolean}
+    prior_approval: {type: boolean}
+    notes: {type: string}
+enum_domains:
+  category: [meal, taxi, hotel, supplies]
+corpus:
+  - path: sources/s15_policy_constants.txt
+    role: authority
+    title: S15 measured policy constants (byte-exact excerpt)
+    sha256: 74BBB199D7E3B3757CADB8469AFBE281A78E25082062032B3FB923AE37613FB0
+    origin: dsh-phocinae-screen/docs/measure-expense-approval.mjs#L26-L31
+  - path: sources/s15_rule_check.txt
+    role: authority
+    title: S15 original rule function (byte-exact excerpt)
+    sha256: FBBB4787280C8C3ACB5708C4C928E969663990CB1125B46105978449AEE4CE71
+    origin: dsh-phocinae-screen/docs/measure-expense-approval.mjs#L108-L118
+  - path: sources/s15_feasibility_excerpt.md
+    role: authority
+    title: S15 three-form comparison table (byte-exact excerpt)
+    sha256: FA54DA12E5DE8E7E30EC2D28AA87E70211D52F99DEF2F549D3F691D38B522004
+    origin: dsh-phocinae-screen/docs/FEASIBILITY-expense.md
+citations:
+  - id: c1
+    source: S15 expense policy (constants embedded in the measurement script)
+    locator: POLICY.receiptRequiredOver
+    quote: "receiptRequiredOver: 500,      // 超过 500 必须有发票"
+    document: sources/s15_policy_constants.txt
+    evidence_level: verbatim
+  - id: c2
+    source: S15 expense policy (constants embedded in the measurement script)
+    locator: POLICY.caps
+    quote: "caps: { meal: 300, taxi: 200, hotel: 1200, supplies: 800 },"
+    document: sources/s15_policy_constants.txt
+    evidence_level: verbatim
+  - id: c3
+    source: S15 expense policy (constants embedded in the measurement script)
+    locator: POLICY.priorApprovalOver
+    quote: "priorApprovalOver: 2000,       // 超过 2000 需事前审批"
+    document: sources/s15_policy_constants.txt
+    evidence_level: verbatim
+  - id: c4
+    source: S15 original rule function
+    locator: ruleCheck() violation branch
+    quote: "if (violations.length) return { verdict: 'reject', why: violations.join('; ') }"
+    document: sources/s15_rule_check.txt
+    evidence_level: verbatim
+  - id: c5
+    source: S15 measurement conclusion (dsh-phocinae-screen)
+    locator: three-form comparison table, row A
+    quote: "| **A 纯规则** | **0/6** | **0/8** | **0** |"
+    document: sources/s15_feasibility_excerpt.md
+    evidence_level: verbatim
+rules:
+  # ---- violations: one rule per policy branch in the measured ruleCheck ----
+  - id: r1_no_receipt_over_500
+    when:
+      all_of:
+        - {field: amount, op: ">", value: 500}
+        - {field: receipt_attached, op: "==", value: false}
+    then: {verdict: fail, reason_code: NO_RECEIPT_OVER_THRESHOLD, cite: [c1, c4]}
+    require_fields: [amount, receipt_attached]
+    note: |
+      POLICY.receiptRequiredOver = 500, so a claim at or below 500 needs no
+      receipt. The comparison is strictly greater than; 500 itself passes and
+      that boundary is tested in both directions.
+  - id: r2_meal_cap
+    when:
+      all_of:
+        - {field: category, op: "==", value: meal}
+        - {field: amount, op: ">", value: 300}
+    then: {verdict: fail, reason_code: OVER_CATEGORY_CAP, cite: [c2, c4]}
+    require_fields: [amount, category]
+  - id: r3_taxi_cap
+    when:
+      all_of:
+        - {field: category, op: "==", value: taxi}
+        - {field: amount, op: ">", value: 200}
+    then: {verdict: fail, reason_code: OVER_CATEGORY_CAP, cite: [c2, c4]}
+    require_fields: [amount, category]
+  - id: r4_hotel_cap
+    when:
+      all_of:
+        - {field: category, op: "==", value: hotel}
+        - {field: amount, op: ">", value: 1200}
+    then: {verdict: fail, reason_code: OVER_CATEGORY_CAP, cite: [c2, c4]}
+    require_fields: [amount, category]
+  - id: r5_supplies_cap
+    when:
+      all_of:
+        - {field: category, op: "==", value: supplies}
+        - {field: amount, op: ">", value: 800}
+    then: {verdict: fail, reason_code: OVER_CATEGORY_CAP, cite: [c2, c4]}
+    require_fields: [amount, category]
+  - id: r6_prior_approval_missing
+    when:
+      all_of:
+        - {field: amount, op: ">", value: 2000}
+        - {field: prior_approval, op: "==", value: false}
+    then: {verdict: fail, reason_code: OVER_2000_WITHOUT_PRIOR_APPROVAL, cite: [c3, c4]}
+    require_fields: [amount, prior_approval]
+  # ---- grey zone: a category the policy does not enumerate ----------------
+  - id: r7_category_not_in_policy
+    when:
+      all_of:
+        - {field: category, op: "exists"}
+        - {field: category, op: "not_in", value: [meal, taxi, hotel, supplies]}
+    then: {verdict: review, reason_code: CATEGORY_NOT_IN_POLICY, cite: [c2]}
+    require_fields: [category]
+    note: |
+      The measured ruleCheck looked the cap up in a table; for a category that
+      is not in the table `cap` is undefined and the cap branch is skipped. That
+      is a silent pass in the original script. Here it becomes an explicit
+      escalation: the tool cannot check a cap it does not have.
+  # ---- the pass rule ------------------------------------------------------
+  - id: r8_within_policy
+    when:
+      all_of:
+        - {field: amount, op: "exists"}
+        - {field: category, op: "exists"}
+        - any_of:
+            - all_of: [{field: category, op: "==", value: meal},     {field: amount, op: "<=", value: 300}]
+            - all_of: [{field: category, op: "==", value: taxi},     {field: amount, op: "<=", value: 200}]
+            - all_of: [{field: category, op: "==", value: hotel},    {field: amount, op: "<=", value: 1200}]
+            - all_of: [{field: category, op: "==", value: supplies}, {field: amount, op: "<=", value: 800}]
+        - any_of: [{field: receipt_attached, op: "==", value: true}, {field: amount, op: "<=", value: 500}]
+        - any_of: [{field: prior_approval, op: "==", value: true}, {field: amount, op: "<=", value: 2000}]
+    then: {verdict: pass, reason_code: NO_POLICY_VIOLATION, cite: [c1, c2, c3, c5]}
+    require_fields: [amount, category]
+    note: |
+      "No violation found" written out explicitly, rather than relying on
+      aggregation, so that a future change to the aggregation rule cannot
+      silently turn "nothing matched" into a pass.
+
+      The last two conditions are the policy's own implications (c1, c3):
+        * a receipt is required only above 500, so the compliant state is
+          "amount <= 500 OR receipt attached";
+        * prior approval is required only above 2000, so the compliant state is
+          "amount <= 2000 OR prior approval recorded".
+      Writing them as negations instead -- "not (prior_approval == false)" --
+      would leave every claim that correctly records no prior approval
+      unmatched, which is a subtle way to turn 14/14 into 6/14.
+
+      An earlier draft of this rule did exactly that. It is recorded here
+      because that class of error is what the A4 assertion (exactly 14, not
+      ">= 13") and the bidirectional tests exist to catch.
+notes:
+  - >-
+    The pass rule requires only `amount` and `category`. Requiring
+    `receipt_attached` or `prior_approval` there would push legitimately
+    compliant claims into MISSING_FIELD/review, which is the failure mode the
+    test suite pins down.
+  - >-
+    Every rule cites at least one entry in `citations`, and every citation is
+    resolved character-for-character against a file in `corpus`.

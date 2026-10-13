@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+dist-upload/
+.eggs/
+*.whl
+*.tar.gz
+.phocinae-rulepack-tmp/
+.phocinae-verify/
+.venv/
+venv/

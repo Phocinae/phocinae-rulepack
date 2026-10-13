@@ -1,0 +1,128 @@
+[
+  {
+    "id": "c01",
+    "amount": 880,
+    "category": "meal",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c02",
+    "amount": 3600,
+    "category": "hotel",
+    "receipt_attached": true,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c03",
+    "amount": 1450,
+    "category": "supplies",
+    "receipt_attached": true,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c04",
+    "amount": 640,
+    "category": "taxi",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c05",
+    "amount": 2400,
+    "category": "meal",
+    "receipt_attached": true,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c06",
+    "amount": 520,
+    "category": "meal",
+    "receipt_attached": true,
+    "prior_approval": false,
+    "expect_verdict": "fail",
+    "expect_label": "reject"
+  },
+  {
+    "id": "c07",
+    "amount": 260,
+    "category": "meal",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c08",
+    "amount": 88,
+    "category": "taxi",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c09",
+    "amount": 320,
+    "category": "supplies",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c10",
+    "amount": 1100,
+    "category": "hotel",
+    "receipt_attached": true,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c11",
+    "amount": 300,
+    "category": "meal",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c12",
+    "amount": 180,
+    "category": "taxi",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c13",
+    "amount": 290,
+    "category": "meal",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  },
+  {
+    "id": "c14",
+    "amount": 210,
+    "category": "supplies",
+    "receipt_attached": false,
+    "prior_approval": false,
+    "expect_verdict": "pass",
+    "expect_label": "approve"
+  }
+]

@@ -1,0 +1,11 @@
+/** A) 纯规则：可查字段全部合规 -> approve；任一违规 -> reject；规则读不懂 -> 需人工 */
+function ruleCheck(c) {
+  const violations = []
+  if (c.amount > POLICY.receiptRequiredOver && !c.receipt) violations.push('no receipt over 500')
+  const cap = POLICY.caps[c.cat]
+  if (cap !== undefined && c.amount > cap) violations.push(`over ${c.cat} cap ${cap}`)
+  if (c.amount > POLICY.priorApprovalOver && !c.preApproved) violations.push('over 2000 without prior approval')
+  if (violations.length) return { verdict: 'reject', why: violations.join('; ') }
+  // 无违规：字段齐全时规则可以放心放行
+  return { verdict: 'approve', why: 'no rule violated' }
+}

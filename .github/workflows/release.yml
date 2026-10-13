@@ -1,0 +1,101 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  test:
+    name: test before publishing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test suite
+        env:
+          PYTHONUTF8: "1"
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python tests/run_all.py
+      - name: Cross-check against PyYAML
+        env:
+          PHOCINAE_RULEPACK_PYYAML: "1"
+        run: |
+          python -m pip install "PyYAML>=6.0"
+          python tests/run_all.py
+
+  build:
+    name: build and inspect the artefact
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --outdir dist-upload
+      - name: Inspect the wheel we are about to upload
+        env:
+          PYTHONUTF8: "1"
+        run: python tools/verify_wheel_contents.py dist-upload
+      - name: A fresh install must work
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m pip install --force-reinstall dist-upload/*.whl
+          phocinae-rulepack --version
+          phocinae-rulepack validate expense-policy --strict
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist-upload/*
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/phocinae-rulepack
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist-upload
+      - name: Publish (OIDC trusted publishing; falls back to a token if configured)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-upload
+          skip-existing: true
+
+  github-release:
+    name: GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist-upload
+      - name: Create the release if it does not exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag already exists"
+          else
+            gh release create "$tag" --generate-notes dist-upload/*
+          fi

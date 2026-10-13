@@ -1,0 +1,28 @@
+{
+  "corpus": [
+    {
+      "path": "sources/s15_policy_constants.txt",
+      "sha256": "74BBB199D7E3B3757CADB8469AFBE281A78E25082062032B3FB923AE37613FB0",
+      "role": "authority",
+      "title": "S15 measured policy constants (byte-exact excerpt)",
+      "origin": "dsh-phocinae-screen/docs/measure-expense-approval.mjs#L26-L31",
+      "origin_sha256": "B5451EC39D0C9634D28FD5B0A1B99FADAFE2DBD76A6D702327DC911356FEA900"
+    },
+    {
+      "path": "sources/s15_rule_check.txt",
+      "sha256": "FBBB4787280C8C3ACB5708C4C928E969663990CB1125B46105978449AEE4CE71",
+      "role": "authority",
+      "title": "S15 original rule function (byte-exact excerpt)",
+      "origin": "dsh-phocinae-screen/docs/measure-expense-approval.mjs#L108-L118",
+      "origin_sha256": "B5451EC39D0C9634D28FD5B0A1B99FADAFE2DBD76A6D702327DC911356FEA900"
+    },
+    {
+      "path": "sources/s15_feasibility_excerpt.md",
+      "sha256": "FA54DA12E5DE8E7E30EC2D28AA87E70211D52F99DEF2F549D3F691D38B522004",
+      "role": "authority",
+      "title": "S15 three-form comparison table (byte-exact excerpt)",
+      "origin": "dsh-phocinae-screen/docs/FEASIBILITY-expense.md",
+      "origin_sha256": "CE1A29E0BC2D251B12B37085DECA3484CC3116DB19BC39F3EF82B75AD058E8B4"
+    }
+  ]
+}

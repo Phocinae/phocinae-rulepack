@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }} · py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install --upgrade pip
+      - name: Test suite (no network, no model, no third-party packages)
+        env:
+          PYTHONUTF8: "1"
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python tests/run_all.py
+      - name: Cross-check the built-in YAML parser against PyYAML
+        env:
+          PHOCINAE_RULEPACK_PYYAML: "1"
+        run: |
+          python -m pip install "PyYAML>=6.0"
+          python tests/run_all.py
+      - name: Validate the shipped packs strictly
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m phocinae_rulepack validate expense-policy --strict
+      - name: The declared Python floor must actually work
+        if: matrix.python == '3.10'
+        env:
+          PYTHONUTF8: "1"
+        run: python -c "import phocinae_rulepack, sys; print(sys.version); print(phocinae_rulepack.__version__)"
+      - name: Build a wheel and inspect it
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          python -m pip install build
+          python -m build --wheel --outdir dist-upload
+          python tools/verify_wheel_contents.py dist-upload
+      - name: The working tree must be clean after the suite
+        shell: bash
+        run: |
+          if [ -d .git ]; then
+            dirty=$(git status --porcelain | wc -l)
+            echo "dirty entries: $dirty"
+            git status --porcelain
+            test "$dirty" -eq 0
+          else
+            echo "not a git checkout; skipping"
+          fi
