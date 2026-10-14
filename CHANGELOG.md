@@ -1,5 +1,86 @@
 # Changelog
 
+## 0.1.2
+
+Documentation, packaging and test coverage for the two 0.1.1 behaviour changes.
+No engine behaviour differs from 0.1.1 beyond the fixes listed at the end.
+
+Independent verification of 0.1.1 re-fetched both source pages and compared all
+21 citation quotes against them: **every quote was found verbatim, and every quote
+is a literal substring of the corpus file it names.** The half-width bracket in
+第八条 was preserved rather than normalised. The findings were in the surrounding
+material, and they are fixed here.
+
+### Fixed — the allergen corpus note named three keys the pack does not use
+
+The note at the end of `sources/fsai_allergens.md` claimed to list "the key each
+allergen is recorded under by the shipped pack", and gave `gluten`, `sesame` and
+`sulphites`. The pack uses `cereals_containing_gluten`, `sesame_seeds` and
+`sulphur_dioxide_and_sulphites`. An integrator following the note would emit three
+keys the rule does not recognise and get `ALLERGEN_KEY_NOT_MAPPABLE` / `review`
+instead of a clean evaluation.
+
+The note is now generated from the same list the rule is built from, so the two
+cannot drift, and the build script is idempotent (verified by building twice and
+comparing digests). All four corpus files were re-hashed.
+
+### Fixed — Annex IV was cited for a number it does not contain
+
+The justification for choosing `0.9 mm` over the FAQ page's `0.9 cm` said the
+figure was "in Annex IV to Regulation (EU) No 1169/2011". Annex IV is titled
+DEFINITION OF x-HEIGHT and contains no threshold; the `0.9 mm` figure is in
+Article 13(3). The pack's stated ground for its choice pointed at the wrong
+provision of the very instrument it says it does not quote. Corrected in the
+corpus note, the rule note and GAPS.md.
+
+### Fixed — GAPS.md understated what is missing, and was not shipped
+
+It said the draft "carries twelve rules" and that five were left out. The draft
+specifies **22**; eight ship and fourteen are absent, so nine omissions were
+undocumented — including `r14_net_quantity_not_positive` and
+`r16_fbo_name_address_empty`, which would be `fail` rules needing no new source.
+All fourteen are now listed with what would close each.
+
+GAPS.md is also referenced twice from the shipped `rulepack.yaml` and once from
+this changelog, but was not in the wheel or the sdist: the reader was pointed at a
+file that did not travel with the package. It is now package data.
+
+### Fixed — the READMEs did not mention `subset_of`
+
+`subset_of` is the only operator that can test an array against a list, so a pack
+author had no way to discover the one thing that works for an array field — which
+is the trap 0.1.1 was released to fix. The operator list, its array semantics, the
+empty-array rule, the kind-for-kind comparison and the `in` / `not_in` pointer are
+now in both READMEs. The published 0.1.1 landing page kept the old ten-operator
+list; this release is the fix.
+
+The READMEs also now state the pass-reason invariant, the one 0.1.1 change that can
+alter an existing pack's output.
+
+### Added — tests for both engine changes
+
+`tests/test_packs.py` grew from 40 to 61 assertions:
+
+* `subset_of` pinned directly at its boundaries — empty array, element outside the
+  list, kind-for-kind comparison (`[1]` is not a subset of `[true]`), nested
+  container as undecidable, non-array field, and the `in`-on-an-array message;
+* the pass-reason drop, which had **no test at all** and could have been reverted
+  with a fully green suite.
+
+### Changed — corpus transcription notes
+
+The corpus files said "quoted verbatim" while normalising the page's non-breaking
+spaces and typographic quote marks. They now say "transcribed from", with a note
+naming exactly what was normalised, and the FAQ page's URL is recorded alongside
+the `0.9 cm` sentence it is quoted from.
+
+### Open — release plumbing
+
+0.1.1 and 0.1.0 were uploaded with `twine` and never tagged, and
+`.github/workflows/release.yml` runs only on `v*` tags, so no GitHub release exists
+for either. Recorded rather than repaired: the credentials to tag belong to the
+publisher.
+
 ## 0.1.1
 
 Two more packs, and two real defects they exposed.
