@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phocinae-rulepack"
-version = "0.1.1"
+version = "0.1.2"
 description = "Deterministic rule-pack engine: read a ledger, apply a versioned rule pack, emit only the differences for human review. Zero model calls, zero third-party runtime dependencies."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -49,5 +49,9 @@ phocinae_rulepack = [
   "packs/*/sources/*",
   "packs/*/rulepack.yaml.draft",
   "packs/*/sources/*/*",
+  # GAPS.md is referenced from the shipped rulepack.yaml and from the CHANGELOG,
+  # so it has to travel with the pack; a pointer to a file that is not in the
+  # wheel sends the reader nowhere.
+  "packs/*/GAPS.md",
   "schema/*.json",
 ]

@@ -1,8 +1,11 @@
-The 14 allergens listed in Annex II, quoted verbatim from the Food Safety Authority of Ireland's guidance on Regulation (EU) No. 1169/2011.
+The 14 allergens listed in Annex II, transcribed from the Food Safety Authority of Ireland's guidance on Regulation (EU) No. 1169/2011.
 
 Source page: FSAI · Food Information to Consumers
 URL: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
 Retrieved: 2026-10-14
+Transcription note: non-breaking spaces are rendered as ordinary spaces, and the
+page's typographic quote marks as straight ASCII quotes. Wording, punctuation and
+emphasis are otherwise unchanged.
 
 The 14 allergens as listed in Annex II are as follows:
 
@@ -35,6 +38,8 @@ The 14 allergens as listed in Annex II are as follows:
 14. Molluscs and products thereof.
 
 Note on the allergen identifiers used by the shipped pack: the key each allergen is
-recorded under (gluten, crustaceans, eggs, fish, peanuts, soybeans, milk, nuts,
-celery, mustard, sesame, sulphites, lupin, molluscs) is this pack's own
-vocabulary, not a string taken from the page. Only the entries above are quoted.
+recorded under (cereals_containing_gluten, crustaceans, eggs, fish, peanuts, soybeans,
+milk, nuts, celery, mustard, sesame_seeds, sulphur_dioxide_and_sulphites, lupin,
+molluscs) is this pack's own vocabulary, not a string taken from the page. The
+authoritative list is the `value:` of rule `r5_allergen_key_outside_annex_ii` in
+`rulepack.yaml`; this note mirrors it. Only the entries above are quoted.

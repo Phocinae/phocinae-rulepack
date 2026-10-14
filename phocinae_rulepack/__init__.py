@@ -27,7 +27,7 @@ from .errors import (
 from .schema import Citation, Pack, Rule, load_pack, validate_pack, ValidationReport
 from .engine import check, check_many, dump_canonical
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 #: Verdict vocabulary. Ordered by strictness so aggregation is a max().
 VERDICTS = ("pass", "review", "fail")

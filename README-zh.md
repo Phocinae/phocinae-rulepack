@@ -34,7 +34,7 @@
 ## 安装
 
 ```sh
-pip install phocinae-rulepack==0.1.0
+pip install phocinae-rulepack==0.1.2
 ```
 
 需要 Python 3.9 或更高。无依赖。本包**不会打开任何网络连接**。
@@ -80,6 +80,13 @@ phocinae-rulepack list --packs-dir ./packs
   `review`（`NO_RULE_MATCHED`）—— 没有任何东西会静静滑过变成放行。
 * **字段缺失或类型不对永远不会变成 `pass`**，缺失一律 `review`，绝不当成合规。
 * **真违规优先于字段缺失。** 一条规则发现违规、另一条无法求值时，判 `fail`，两条都报出来。
+* **`pass` 理由永远不会跟更严格的理由并列出现。** 当一条规则判 `pass`、另一条判
+  `fail` 或 `review` 同时命中时，输出里只留后者 ——「未发现问题」和「这里有个问题」
+  并列本身就是自相矛盾。这是**引擎层的不变量**，不是 pack 作者要自己写的条件：
+  pack 无法可靠表达「没有别的规则命中」，而把条件抄进每条 pass 规则，第一次漏抄就错。
+  **这是 0.1.1 唯一会改变既有 pack 输出的改动**（只影响 `reasons` 数组的长短，
+  判定与退出码不变；`reasons` 也永远不会被清空）。调用方请读 `verdict`，
+  不要看「有没有 pass 理由」。
 * **`model_calls` 是真实计数器，且恒为 `0`。**
 
 ## 取证模型才是重点
@@ -130,7 +137,34 @@ rules:
 
 表达式语言是刻意做小的：`field OP value`，用 `all_of` / `any_of` / `not` 组合，
 `value` 可以是 `{"ref": "other.field"}` 用来比较两个字段。
-算子：`== != < <= > >= in not_in matches exists missing`。
+算子：`== != < <= > >= in not_in subset_of matches exists missing`。
+
+`in` / `not_in` 左侧是**标量**，判断它是否在右侧列表里。`subset_of` 左侧是**数组**，
+判断它的**每个元素**是否都在右侧列表里 —— 这是唯一能表达「声明的这些键全都属于
+允许词表」的算子：
+
+```yaml
+- id: r_allergens_mappable
+  when:
+    not:
+      field: allergens_declared
+      op: subset_of
+      value: [celery, eggs, fish, milk, mustard, nuts, peanuts, sesame_seeds, soybeans]
+  then: {verdict: review, reason_code: ALLERGEN_KEY_NOT_MAPPABLE, cite: [c1]}
+  require_fields: [allergens_declared]
+```
+
+空数组是任何列表的子集，所以「什么都没声明」不会被读成「有东西不在词表里」。
+元素比较与这门语言其他算子一样按类型成对比较：`true`、`1`、`"1"` 是三样东西，
+因此 `[1]` **不是** `[true]` 的子集。把数组交给 `in` / `not_in` 是 `TYPE_ERROR`
+（判定变成 `review`），错误信息会提示改用 `subset_of`。
+
+**当多条规则同时命中且判定不一致时，`pass` 类理由会被丢掉，只留 `fail` / `review`
+那几条**：把「没发现偏差」和「这就是偏差」并列报出来是自相矛盾，不是信息。
+这是引擎的职责，pack 不需要在每条 `pass` 规则里自己表达「别的规则都没命中」。
+这条行为在 **0.1.1** 变了 —— 0.1.0 两者都会报 —— 也是那个版本里唯一可能改变既有
+pack `reasons` 数组的改动。判定与退出码不受影响：只有当判定本来就是 `fail` 或
+`review` 时，`pass` 条目才会被丢掉。
 
 **没有**算术、没有自定义函数、没有循环、没有网络。
 需要算出来的值，请在构造输入文档的适配器里算 —— 这样判定依据留在 pack 里，可引用、可测试。

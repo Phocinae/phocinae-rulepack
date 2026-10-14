@@ -18,7 +18,13 @@ unknown can never become a silent allow.
 
 Operators
     ==  !=  <  <=  >  >=      comparison (numbers, strings, booleans, null)
-    in  not_in                value membership in a list
+    in  not_in                scalar membership in a list
+    subset_of                 EVERY element of an array is in the list; an empty
+                              array is a subset of everything. Elements are
+                              compared kind-for-kind, exactly as ``in`` does it,
+                              so True is not 1 and "1" is not 1. A nested list or
+                              mapping inside the array is a TYPE_ERROR (unknown),
+                              not a plain False.
     matches                   re.search of a pattern against a string
     exists  missing           key presence (always definite)
 """

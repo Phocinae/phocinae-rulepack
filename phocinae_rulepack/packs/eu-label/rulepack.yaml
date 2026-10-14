@@ -1,7 +1,7 @@
 schema: phocinae-rulepack/v1
 id: eu-label
 title: Food label compliance check (FSAI guidance on Regulation (EU) No. 1169/2011)
-version: 0.1.1
+version: 0.1.2
 scenario: XC7
 description: |
   Read a label data table, one row per SKU, against the FSAI's published guidance
@@ -53,25 +53,25 @@ corpus:
   - path: sources/fsai_mandatory_particulars.md
     role: authority
     title: FSAI · Food Information to Consumers — mandatory particulars (a)-(l)
-    sha256: B2CA110102B1E639E09B3DB9F17C1354E3BB2B56106A52580A68DD8F5B478262
+    sha256: B9638F7D2D331ADF0D193D23D62B4A4C44CDA803AC2F5C2E5F879226588E2EA9
     url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
     retrieved: "2026-10-14"
   - path: sources/fsai_allergens.md
     role: authority
     title: FSAI · the 14 allergens listed in Annex II
-    sha256: D10CD5C4C588FEAD3436042C64BD8B1BC745F025FCD104B334D033C854818C63
+    sha256: CC125A6E3FD108D2DAC7B314D515649944B261564E6D83EEA421ACA32D8912BB
     url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
     retrieved: "2026-10-14"
   - path: sources/fsai_allergen_display.md
     role: authority
     title: FSAI · how allergen information must be displayed
-    sha256: 8D934EF4789C0C75BEEDCB04C81819D001CC9E426839EF4A0F466D9D4446751A
+    sha256: 952507E7FA160CF1A2858400965DE9E417CC7EF138F07C4570F1A4992BD2148C
     url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
     retrieved: "2026-10-14"
   - path: sources/fsai_legibility.md
     role: authority
     title: FSAI · Labelling - General Labelling — minimum font size
-    sha256: 93C159A86CEAA12E25BCF8600A7B541F9BFFC31ED8E48EAD986DA7647712B098
+    sha256: C8D038D99C6FF23E39A553ED276F7B30DA4F3C76AF73EF3CF0532E08BD5C1D48
     url: https://www.fsai.ie/business-advice/labelling/labelling-general-labelling
     retrieved: "2026-10-14"
 citations:
@@ -129,7 +129,7 @@ rules:
     require_fields: [x_height_mm, package_area_cm2]
     note: |
       The FSAI's FAQ page states this figure as "0.9 cm" while its General
-      Labelling page states "0.9 mm". Annex IV to the Regulation says 0.9 mm, so
+      Labelling page states "0.9 mm". Article 13(3) of the Regulation says 0.9 mm, so
       0.9 mm is used; the discrepancy is recorded in the corpus file rather than
       smoothed over.
   # ---- mandatory particulars -------------------------------------------

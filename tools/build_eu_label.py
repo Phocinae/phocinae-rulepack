@@ -2,7 +2,7 @@
 """Write the `eu-label` pack: computed hashes, and every quote verified against
 the corpus file it names.
 
-Rule scope for 0.1.0 is narrower than the design draft, on purpose. The draft
+Rule scope for 0.1.2 is narrower than the design draft, on purpose. The draft
 carries twelve rules; three of them (date-mark wording, date form, use-by storage
 conditions) cite a page this build has not fetched, and the unit rule cites
 Annex IX, whose text was not obtained. A pack whose citations cannot be resolved
@@ -72,11 +72,42 @@ ALLERGEN_VOCAB = [
     "sulphur_dioxide_and_sulphites",
 ]
 
+#: The pack's own vocabulary for the 14 Annex II allergens. Written into the
+#: corpus note from this list rather than typed twice, because a hand-written
+#: mirror of a vocabulary drifts: the first release's note named three keys
+#: (gluten, sesame, sulphites) that the pack does not use.
+ALLERGEN_NOTE = (
+    "Note on the allergen identifiers used by the shipped pack. The key each allergen\n"
+    "is recorded under is this pack's own vocabulary, not a string taken from the page:\n"
+    "\n"
+    "%s\n"
+    "\n"
+    "The authoritative list is the `value:` of rule `r5_allergen_key_outside_annex_ii`\n"
+    "in `rulepack.yaml`; this note is generated from the same list at build time. Only\n"
+    "the numbered entries above are quoted from the page.\n"
+)
+
+
+def _allergen_note():
+    keys = list(ALLERGEN_VOCAB)
+    rows = []
+    for start in range(0, len(keys), 4):
+        rows.append("  " + ", ".join(keys[start:start + 4]))
+    return ALLERGEN_NOTE % "\n".join(rows)
+
+
 MANDATORY_FIELDS = [
     "name", "ingredients_list", "quantity_of_ingredients", "net_quantity", "date_mark",
     "storage_conditions", "fbo_name_address", "country_of_origin", "instructions_for_use",
     "nutrition_declaration",
 ]
+
+
+TRANSCRIPTION_NOTE = (
+    "Transcription note: non-breaking spaces are rendered as ordinary spaces, and the\n"
+    "page's typographic quote marks as straight ASCII quotes. Wording, punctuation and\n"
+    "emphasis are otherwise unchanged.\n"
+)
 
 
 def sha(text):
@@ -117,7 +148,7 @@ add = lines.append
 add("schema: phocinae-rulepack/v1")
 add("id: eu-label")
 add("title: Food label compliance check (FSAI guidance on Regulation (EU) No. 1169/2011)")
-add("version: 0.1.1")
+add("version: 0.1.2")
 add("scenario: XC7")
 add("description: |")
 add("  Read a label data table, one row per SKU, against the FSAI's published guidance")
@@ -194,7 +225,7 @@ add("    then: {verdict: fail, reason_code: XHEIGHT_BELOW_0_9MM_SMALL_PACK, cite
 add("    require_fields: [x_height_mm, package_area_cm2]")
 add("    note: |")
 add("      The FSAI's FAQ page states this figure as \"0.9 cm\" while its General")
-add("      Labelling page states \"0.9 mm\". Annex IV to the Regulation says 0.9 mm, so")
+add("      Labelling page states \"0.9 mm\". Article 13(3) of the Regulation says 0.9 mm, so")
 add("      0.9 mm is used; the discrepancy is recorded in the corpus file rather than")
 add("      smoothed over.")
 add("  # ---- mandatory particulars -------------------------------------------")
@@ -280,9 +311,9 @@ with open(os.path.join(PACK, "rulepack.yaml"), "w", encoding="utf-8", newline="\
 print("wrote rulepack.yaml (%d lines)" % len(lines))
 
 with open(os.path.join(PACK, "GAPS.md"), "w", encoding="utf-8", newline="\n") as fh:
-    fh.write("""# Known gaps in `eu-label` 0.1.0
+    fh.write("""# Known gaps in `eu-label` 0.1.1
 
-The design draft carries twelve rules. Seven ship. The other five are listed here
+The design draft specifies 22 rules for this pack. Eight ship. The other fourteen are listed here
 rather than shipped with citations nobody can resolve, because a rule whose source
 cannot be checked is not a gate.
 
@@ -302,9 +333,10 @@ entry as `11. ***Sesame seeds*** and products thereof`, while the published page
 reads `11. Sesame seeds and products thereof`. The shipped citations are taken from
 the fetched pages, not from the draft.
 
-The draft also attributes the "0.9 mm" figure for small packages to the FSAI's FAQ
-page. That page states `0.9 cm`. The General Labelling page states `0.9 mm`, which
-matches Annex IV to the Regulation, so the General Labelling page is cited. Both
+The FSAI's own two pages disagree on the small-package figure: the General Labelling
+page states `0.9 mm` and the FAQ page states `0.9 cm`. The draft cited the General
+Labelling page, and the pack cites the same page, because `0.9 mm`
+matches Article 13(3) of the Regulation, so the General Labelling page is cited. Both
 figures and the disagreement are recorded in
 `sources/fsai_legibility.md` so a reader can see the choice rather than infer it.
 """)

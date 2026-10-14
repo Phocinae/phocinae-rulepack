@@ -1,6 +1,6 @@
-# Known gaps in `eu-label` 0.1.0
+# Known gaps in `eu-label` 0.1.1
 
-The design draft carries twelve rules. Seven ship. The other five are listed here
+The design draft specifies 22 rules for this pack. Eight ship. The other fourteen are listed here
 rather than shipped with citations nobody can resolve, because a rule whose source
 cannot be checked is not a gate.
 
@@ -20,8 +20,9 @@ entry as `11. ***Sesame seeds*** and products thereof`, while the published page
 reads `11. Sesame seeds and products thereof`. The shipped citations are taken from
 the fetched pages, not from the draft.
 
-The draft also attributes the "0.9 mm" figure for small packages to the FSAI's FAQ
-page. That page states `0.9 cm`. The General Labelling page states `0.9 mm`, which
-matches Annex IV to the Regulation, so the General Labelling page is cited. Both
+The FSAI's own two pages disagree on the small-package figure: the General Labelling
+page states `0.9 mm` and the FAQ page states `0.9 cm`. The draft cited the General
+Labelling page, and the pack cites the same page, because `0.9 mm`
+matches Article 13(3) of the Regulation, so the General Labelling page is cited. Both
 figures and the disagreement are recorded in
 `sources/fsai_legibility.md` so a reader can see the choice rather than infer it.

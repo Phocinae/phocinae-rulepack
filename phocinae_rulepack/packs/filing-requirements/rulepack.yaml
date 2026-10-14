@@ -1,7 +1,7 @@
 schema: phocinae-rulepack/v1
 id: filing-requirements
 title: 法院立案材料要件审查（民事一审）
-version: 0.1.1
+version: 0.1.2
 scenario: L10
 description: |
   读一份立案材料清单，对一版要件表，输出缺项与不符项供人复核。

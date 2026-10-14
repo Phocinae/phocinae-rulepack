@@ -96,8 +96,8 @@ def main(argv):
                 if line.startswith("Version: "):
                     version = line.split(": ", 1)[1].strip()
             stream.write("metadata version: %s\n" % version)
-            if version != "0.1.1":
-                failures.append("METADATA Version is %r, expected '0.1.1'" % version)
+            if version != "0.1.2":
+                failures.append("METADATA Version is %r, expected '0.1.2'" % version)
 
             # A dependency guarded by an `extra ==` marker is only installed when
             # someone asks for that extra, so it is not a runtime dependency.

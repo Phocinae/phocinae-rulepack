@@ -1,8 +1,11 @@
-Mandatory information on the label of a prepacked food, quoted verbatim from the Food Safety Authority of Ireland's guidance on Regulation (EU) No. 1169/2011.
+Mandatory information on the label of a prepacked food, transcribed from the Food Safety Authority of Ireland's guidance on Regulation (EU) No. 1169/2011.
 
 Source page: FSAI · Food Information to Consumers
 URL: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
 Retrieved: 2026-10-14
+Transcription note: non-breaking spaces are rendered as ordinary spaces, and the
+page's typographic quote marks as straight ASCII quotes. Wording, punctuation and
+emphasis are otherwise unchanged.
 
 The following mandatory information must appear on the label:
 

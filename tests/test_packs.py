@@ -276,10 +276,86 @@ def test_eu_label():
        repr(reasons(result)))
 
 
+def test_subset_of():
+    """`subset_of` is the only operator that can test an array against a list.
+
+    `in` / `not_in` take a scalar on the left, so passing an array is a
+    TYPE_ERROR -- which is how eu-label's allergen rule silently never fired
+    before 0.1.1. These pin the operator's boundaries directly, because the pack
+    only exercises the middle of its range.
+    """
+    from phocinae_rulepack.expr import compile_condition, evaluate
+
+    def run(op_value, field_value, op="subset_of"):
+        condition = compile_condition(
+            {"field": "items", "op": op, "value": op_value}, "t")
+        return evaluate(condition, {"items": field_value})
+
+    ok("S1 a full subset is true", run(["a", "b"], ["a", "b"]).value is True)
+    ok("S2 a proper subset is true", run(["a", "b", "c"], ["a"]).value is True)
+    ok("S3 an empty array is a subset of everything", run(["a"], []).value is True)
+    ok("S4 an element outside the list is false", run(["a"], ["a", "z"]).value is False)
+    ok("S5 nothing matches", run(["a", "b"], ["z"]).value is False)
+    ok("S6 kinds are compared, so \"1\" is not 1",
+       run([1], ["1"]).value is False)
+    ok("S7 and True is not 1", run([1], [True]).value is False)
+    ok("S8 a nested container is undecidable, not false",
+       run(["a"], [["a"]]).value is None)
+    ok("S9 and the reason is a type error",
+       run(["a"], [["a"]]).reason_code == "TYPE_ERROR")
+    ok("S10 a non-array field is undecidable",
+       run(["a"], "a").value is None)
+    ok("S11 and says the field is not a list",
+       "not a list" in (run(["a"], "a").detail or ""),
+       repr(run(["a"], "a").detail))
+
+    # `in` on an array must say what to use instead, not just fail.
+    result = run(["a"], ["a", "b"], op="in")
+    ok("S12 `in` on an array is a type error", result.value is None)
+    ok("S13 and the message names subset_of",
+       "subset_of" in (result.detail or ""), repr(result.detail))
+
+
+def test_pass_reason_dropped():
+    """A `pass` reason must never sit beside a stricter one.
+
+    Reporting both NO_REQUIREMENT_GAP and a rule's failure on the same document is
+    a contradiction. This is an engine-level invariant with no test before 0.1.1,
+    so it could have been reverted with a fully green suite.
+    """
+    pack = load_pack("filing-requirements")
+
+    # One rule says "requirements met", another says "too few copies". Both
+    # conditions hold simultaneously for this record.
+    record = _compliant_filing()
+    record["complaint"]["copies_submitted"] = 1
+    result = check(pack, record)
+    codes = reasons(result)
+    eq("P1 the verdict is fail", result["verdict"], "fail")
+    eq("P2 the breach is reported", codes, ["COPIES_FEWER_THAN_DEFENDANTS"])
+    ok("P3 and the pass reason is gone", "NO_REQUIREMENT_GAP" not in codes, repr(codes))
+    ok("P4 reasons is never emptied", len(result["reasons"]) >= 1, repr(result["reasons"]))
+
+    # Same shape on eu-label: a fail rule and the pass rule both fire.
+    label = _compliant_label()
+    label["x_height_mm"] = 1.0
+    result = check(load_pack("eu-label"), label)
+    codes = reasons(result)
+    eq("P5 eu-label: a fail outranks the pass rule", codes, ["XHEIGHT_BELOW_1_2MM"])
+    ok("P6 and no pass reason survives", "NO_GUIDANCE_DEPARTURE" not in codes, repr(codes))
+
+    # When nothing stricter fires, the pass reason must be there.
+    result = check(load_pack("eu-label"), _compliant_label())
+    eq("P7 a compliant record still reports pass", reasons(result),
+       ["NO_GUIDANCE_DEPARTURE"])
+    eq("P8 with a pass verdict", result["verdict"], "pass")
+
+
 def main():
     stream = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     stream.write("phocinae-rulepack pack behaviour tests\n\n")
-    for test in (test_filing_requirements, test_eu_label):
+    for test in (test_filing_requirements, test_eu_label, test_subset_of,
+                 test_pass_reason_dropped):
         before = len(FAILED)
         try:
             test()

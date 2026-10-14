@@ -38,7 +38,7 @@ If you want the measurement harness rather than the kernel, see
 ## Install
 
 ```sh
-pip install phocinae-rulepack==0.1.1
+pip install phocinae-rulepack==0.1.2
 ```
 
 Python 3.9 or newer. No dependencies. Nothing in this package opens a socket.
@@ -86,6 +86,15 @@ Priority is fixed and total: `3 > 1 > 2 > 0`.
   fields are `review`; they are never treated as compliance.
 * **A real violation outranks a missing field.** If one rule finds a breach and
   another cannot be evaluated, the verdict is `fail` and both are reported.
+* **A `pass` reason is never reported beside a stricter one.** When rules with
+  different verdicts match the same document, the `pass` entries are dropped and
+  only the `fail` / `review` entries remain: "no departure found" beside "here is
+  the departure" is a contradiction, not information. The engine does this, so a
+  pack does not have to express "no other rule fired" in every `pass` rule. This
+  changed in **0.1.1** — 0.1.0 reported both — and it is the one change in that
+  release that can alter the `reasons` array of an existing pack. Verdicts and
+  exit codes are unaffected: a `pass` entry is only ever dropped when the verdict
+  was already going to be `fail` or `review`.
 * **`model_calls` is a real counter, and it is always `0`.**
 
 ## The evidence model is the point
@@ -139,7 +148,32 @@ rules:
 
 The expression language is deliberately small: `field OP value` combined with
 `all_of` / `any_of` / `not`, and a `value` may be `{"ref": "other.field"}` to
-compare two fields. Operators: `== != < <= > >= in not_in matches exists missing`.
+compare two fields. Operators: `== != < <= > >= in not_in subset_of matches
+exists missing`.
+
+`in` / `not_in` take a **scalar** on the left and test membership in the list on
+the right. `subset_of` takes an **array** on the left and asks whether *every*
+element of it appears in the list on the right — the only way to express "all of
+these declared keys are in the allowed vocabulary":
+
+```yaml
+# the field's array must be a subset of the allowed list; note the `not:`
+- id: r_allergens_mappable
+  when:
+    not:
+      field: allergens_declared
+      op: subset_of
+      value: [celery, eggs, fish, milk, mustard, nuts, peanuts, sesame_seeds, soybeans]
+  then: {verdict: review, reason_code: ALLERGEN_KEY_NOT_MAPPABLE, cite: [c1]}
+  require_fields: [allergens_declared]
+```
+
+An empty array is a subset of every list, so "nothing declared" never reads as
+"something outside the vocabulary". Elements are compared kind-for-kind, the same
+way every other operator in this language compares values: `true`, `1` and `"1"`
+are three different things, so `[1]` is **not** a subset of `[true]`. Passing an
+array to `in` / `not_in` is a `TYPE_ERROR` (the verdict becomes `review`) and the
+message says to use `subset_of`.
 
 There is **no** arithmetic, no custom function, no loop, and no network access.
 If you need a computed value, compute it in the adapter that builds the input

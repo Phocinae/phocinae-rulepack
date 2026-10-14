@@ -4,6 +4,14 @@
 
 Two more packs, and two real defects they exposed.
 
+> Release note: 0.1.1 is on PyPI, but the repository carries **no `v0.1.1` tag and
+> no GitHub release** — `release.yml` only runs `on: push: tags: ["v*"]`, and the
+> GitHub release job (`gh release create`) never ran. This changelog is also not
+> shipped in the sdist (`pyproject.toml` has no `license-files`/`data-files` entry
+> for it), so from a `pip install` there is nothing that describes this release.
+> Whoever cuts the next one should also tag 0.1.1 retroactively, or the changes
+> above stay unlinkable from the repository.
+
 ### Added — `eu-label` (XC7)
 
 Food label compliance against the Food Safety Authority of Ireland's published
@@ -34,6 +42,17 @@ failure on the same document. Both rules were individually correct; reporting th
 together is a contradiction. The engine now drops `pass` reasons whenever
 something stricter fired.
 
+**This is the one 0.1.1 change that can alter the output of an existing pack.**
+The `reasons` array of a document that both passes one rule and fails or escalates
+another is now shorter by its `pass` entries. Verdicts are not affected: a `pass`
+entry is only dropped when the verdict was already going to be `fail` or `review`,
+so a document whose every reason is `pass` still reports `pass` with its reasons
+intact. `reasons` is never emptied — at least one `fail`/`review` entry always
+survives, and there is no input for which the filter can remove all of them. A
+consumer that treated "a `pass` reason is present" as "this document is compliant"
+must now read `verdict` instead; that reading was always the correct one. The
+invariant is documented in the README under "The three-state result".
+
 This belongs in the engine rather than in every pack: a pack cannot reliably
 express "no other rule fired", and repeating the condition in each pass rule would
 be wrong the first time someone forgot. Doing it centrally also makes the
@@ -49,9 +68,16 @@ conservative rule.
 
 The `subset_of` operator was added for this: every element of the array must
 appear in the given list. An empty array is a subset of everything, so "no
-allergens declared" is not reported as an unmappable key. The plain `in` /
-`not_in` operators now say so in their error when handed an array, instead of
-leaving the author to guess.
+allergens declared" is not reported as an unmappable key. Elements are compared
+kind-for-kind, exactly as `in` compares them, so `[1]` is not a subset of
+`[true]` and `["1"]` is not a subset of `[1]`. The plain `in` / `not_in` operators
+now say so in their error when handed an array, instead of leaving the author to
+guess. Only the wording changed there: the reason code (`TYPE_ERROR`) and the
+resulting `review` are identical to 0.1.0, so no existing pack's verdicts move.
+The new operator is additive, and it is the only thing in 0.1.1 that an older
+engine cannot read: a pack using `subset_of` fails validation on 0.1.0 with
+`E_EXPR` naming the operator, rather than being silently accepted. The operator
+list in the README and in `expr.py`'s own header was brought up to date.
 
 ### Added — pack behaviour tests
 

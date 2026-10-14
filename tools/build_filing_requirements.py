@@ -67,7 +67,7 @@ add = lines.append
 add("schema: phocinae-rulepack/v1")
 add("id: filing-requirements")
 add("title: 法院立案材料要件审查（民事一审）")
-add("version: 0.1.1")
+add("version: 0.1.2")
 add("scenario: L10")
 add("description: |")
 add("  读一份立案材料清单，对一版要件表，输出缺项与不符项供人复核。")
