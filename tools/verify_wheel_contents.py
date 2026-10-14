@@ -21,6 +21,11 @@ import sys
 import zipfile
 
 REQUIRED = [
+    "phocinae_rulepack/packs/filing-requirements/sources/fa_shi_2015_8_excerpt.md",
+    "phocinae_rulepack/packs/filing-requirements/rulepack.yaml",
+    "phocinae_rulepack/packs/eu-label/sources/fsai_legibility.md",
+    "phocinae_rulepack/packs/eu-label/sources/fsai_mandatory_particulars.md",
+    "phocinae_rulepack/packs/eu-label/rulepack.yaml",
     "phocinae_rulepack/__init__.py",
     "phocinae_rulepack/__main__.py",
     "phocinae_rulepack/cli.py",
@@ -91,8 +96,8 @@ def main(argv):
                 if line.startswith("Version: "):
                     version = line.split(": ", 1)[1].strip()
             stream.write("metadata version: %s\n" % version)
-            if version != "0.1.0":
-                failures.append("METADATA Version is %r, expected '0.1.0'" % version)
+            if version != "0.1.1":
+                failures.append("METADATA Version is %r, expected '0.1.1'" % version)
 
             # A dependency guarded by an `extra ==` marker is only installed when
             # someone asks for that extra, so it is not a runtime dependency.

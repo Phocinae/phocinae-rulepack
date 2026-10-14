@@ -1,5 +1,88 @@
 # Changelog
 
+## 0.1.1
+
+Two more packs, and two real defects they exposed.
+
+### Added — `eu-label` (XC7)
+
+Food label compliance against the Food Safety Authority of Ireland's published
+guidance on Regulation (EU) No. 1169/2011. Eight rules: the x-height thresholds
+(1.2 mm, and 0.9 mm below 80 cm²), a missing mandatory particular, unemphasised
+allergens, an allergen key outside the Annex II vocabulary, an alcoholic drink
+above 1.2% without a strength declaration, and the field-of-vision grouping.
+
+Every citation is `derived`: the FSAI advises on the Regulation, so these are the
+authority's words rather than the instrument's own text, and the validator says so
+on each run. The corpus is excerpted from pages fetched live, and the build script
+refuses to write the pack unless every declared quote is present in the file it
+names.
+
+### Added — `filing-requirements` (L10)
+
+Court filing requirements for a civil first-instance case, against 法释〔2015〕8号.
+Thirteen rules. A missing item escalates to `review` and never to `fail`, because
+Article 7 makes the remedy a one-time written notice to supplement; only the copy
+count can fail, because Article 6(4) requires it to match the number of
+defendants. It is the only shipped rule that compares two input fields
+(`{"ref": ...}`).
+
+### Fixed — a pass reason beside a fail reason
+
+The engine reported both `NO_REQUIREMENT_GAP` ("no departure found") and a rule's
+failure on the same document. Both rules were individually correct; reporting them
+together is a contradiction. The engine now drops `pass` reasons whenever
+something stricter fired.
+
+This belongs in the engine rather than in every pack: a pack cannot reliably
+express "no other rule fired", and repeating the condition in each pass rule would
+be wrong the first time someone forgot. Doing it centrally also makes the
+invariant hold for packs written before the change.
+
+### Fixed — `eu-label`'s allergen rule could never fire
+
+The first version tested the `allergens_declared` **array** for list membership.
+`in` / `not_in` take a scalar on the left, so the engine reported `TYPE_ERROR` and
+the rule never matched anything. Worse, it looked like caution: an operator that
+never fires produces `review`, which is indistinguishable from a deliberately
+conservative rule.
+
+The `subset_of` operator was added for this: every element of the array must
+appear in the given list. An empty array is a subset of everything, so "no
+allergens declared" is not reported as an unmappable key. The plain `in` /
+`not_in` operators now say so in their error when handed an array, instead of
+leaving the author to guess.
+
+### Added — pack behaviour tests
+
+`tests/test_packs.py`, 40 assertions. Validity is not behaviour: a pack can
+validate cleanly and still never fire, which is exactly what happened above. The
+new suite drives both packs over records that must pass, must fail, and must
+escalate, and includes the boundary cases (exactly 80 cm²; copies equal to the
+defendant count; x-height at the threshold).
+
+### Corrections to the design draft's citations
+
+The draft's `eu-label` quotes do not all appear on the pages it cites. The
+allergen-list entry is recorded as `11. ***Sesame seeds*** and products thereof`
+where the page reads `11. Sesame seeds and products thereof`, and the draft
+attributes the small-package `0.9 mm` figure to the FSAI FAQ page, which states
+`0.9 cm`. The shipped citations come from the fetched text; both figures and the
+disagreement are recorded in `sources/fsai_legibility.md`.
+
+The draft's `filing-requirements` quotes were checked against the fetched text and
+all fifteen matched.
+
+### Not shipped, on purpose
+
+`eu-label` carries seven of the draft's twelve rules and `filing-requirements`
+carries thirteen. The rest need sources this release did not obtain (the FSAI
+shelf-life page for the date-mark rules; Annex IX for the net-quantity unit rule).
+A rule whose citation cannot be resolved is not a gate — with `evidence_level:
+unavailable` the engine caps the verdict to `review`, so the rule could never
+fail. `phocinae_rulepack/packs/eu-label/GAPS.md` lists each omission and what
+would close it.
+
 ## 0.1.0 — unreleased
 
 First release. The deterministic rule-pack engine, with one shipped pack.

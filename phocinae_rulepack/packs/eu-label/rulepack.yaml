@@ -1,0 +1,218 @@
+schema: phocinae-rulepack/v1
+id: eu-label
+title: Food label compliance check (FSAI guidance on Regulation (EU) No. 1169/2011)
+version: 0.1.1
+scenario: XC7
+description: |
+  Read a label data table, one row per SKU, against the FSAI's published guidance
+  on Regulation (EU) No. 1169/2011, and emit only the differences for a human to
+  review. It reaches no compliance conclusion and makes no model calls.
+
+  Every citation is evidence_level: derived. The FSAI advises on the Regulation;
+  these are the authority's restatement, not the instrument's own text, and the
+  validator warns accordingly. Nothing here is quoted from the Regulation itself.
+
+  Scope note: this pack does not carry the date-mark rules (wording, numeric form,
+  use-by storage conditions) or the net-quantity unit rule. Their bases -- the FSAI
+  shelf-life page and Annex IX -- were not obtained for this release, and a rule
+  whose source cannot be resolved is not a gate. See GAPS.md.
+missing_field_policy: review
+input_schema:
+  type: object
+  required: [sku, fields, allergens_declared, allergens_emphasised, x_height_mm, package_area_cm2, vision]
+  properties:
+    sku: {type: string}
+    fields:
+      type: object
+      properties:
+        name: {type: boolean}
+        ingredients_list: {type: boolean}
+        quantity_of_ingredients: {type: boolean}
+        net_quantity: {type: boolean}
+        date_mark: {type: boolean}
+        storage_conditions: {type: boolean}
+        fbo_name_address: {type: boolean}
+        country_of_origin: {type: boolean}
+        instructions_for_use: {type: boolean}
+        nutrition_declaration: {type: boolean}
+    alcohol_by_volume_pct: {type: number}
+    allergens_declared: {type: array, items: {type: string}}
+    allergens_emphasised: {type: boolean}
+    net_quantity: {type: object, properties: {value: {type: number}, unit: {type: string}}}
+    x_height_mm: {type: number}
+    package_area_cm2: {type: number}
+    vision:
+      type: object
+      properties:
+        name: {type: string}
+        net_quantity: {type: string}
+        alcohol_strength: {type: string}
+enum_domains:
+  net_quantity.unit: [g, kg, ml, cl, l]
+corpus:
+  - path: sources/fsai_mandatory_particulars.md
+    role: authority
+    title: FSAI · Food Information to Consumers — mandatory particulars (a)-(l)
+    sha256: B2CA110102B1E639E09B3DB9F17C1354E3BB2B56106A52580A68DD8F5B478262
+    url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
+    retrieved: "2026-10-14"
+  - path: sources/fsai_allergens.md
+    role: authority
+    title: FSAI · the 14 allergens listed in Annex II
+    sha256: D10CD5C4C588FEAD3436042C64BD8B1BC745F025FCD104B334D033C854818C63
+    url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
+    retrieved: "2026-10-14"
+  - path: sources/fsai_allergen_display.md
+    role: authority
+    title: FSAI · how allergen information must be displayed
+    sha256: 8D934EF4789C0C75BEEDCB04C81819D001CC9E426839EF4A0F466D9D4446751A
+    url: https://www.fsai.ie/business-advice/labelling/food-information-to-consumers
+    retrieved: "2026-10-14"
+  - path: sources/fsai_legibility.md
+    role: authority
+    title: FSAI · Labelling - General Labelling — minimum font size
+    sha256: 93C159A86CEAA12E25BCF8600A7B541F9BFFC31ED8E48EAD986DA7647712B098
+    url: https://www.fsai.ie/business-advice/labelling/labelling-general-labelling
+    retrieved: "2026-10-14"
+citations:
+  - id: c_mand_a_l
+    source: FSAI · Food Information to Consumers（Regulation (EU) No. 1169/2011 释义）
+    locator: What mandatory information must appear on the label of a prepacked food? (a)-(l)
+    quote: "(l) a nutrition declaration"
+    document: sources/fsai_mandatory_particulars.md
+    evidence_level: derived
+  - id: c_field_of_vision
+    source: FSAI · 同上（同视野要求脚注）
+    locator: What mandatory information must appear on the label of a prepacked food? (footnote)
+    quote: "*must appear in the same field of vision"
+    document: sources/fsai_mandatory_particulars.md
+    evidence_level: derived
+  - id: c_allergens_14
+    source: FSAI · 同上（Annex II 过敏原清单）
+    locator: What are the 14 allergens?
+    quote: "The 14 allergens as listed in Annex II are as follows:"
+    document: sources/fsai_allergens.md
+    evidence_level: derived
+  - id: c_allergen_emphasis
+    source: FSAI · 同上（过敏原标注方式）
+    locator: How must allergen information be displayed on the label?
+    quote: "They must be emphasised through being typeset in a way that clearly distinguishes them from the rest of the list of ingredients, for example by means of font, style or background colour."
+    document: sources/fsai_allergen_display.md
+    evidence_level: derived
+  - id: c_font_12
+    source: FSAI · Labelling - General Labelling（最小字号）
+    locator: Minimum Font Size
+    quote: "in characters using a font size where the x-height is equal to or greater than 1.2 mm"
+    document: sources/fsai_legibility.md
+    evidence_level: derived
+  - id: c_font_09
+    source: FSAI · 同上（小包装阈值）
+    locator: Minimum Font Size
+    quote: "In case of packaging or containers, the largest surface of which has an area of less than 80 cm2, the x-height of the font size must be equal to or greater than 0.9 mm."
+    document: sources/fsai_legibility.md
+    evidence_level: derived
+rules:
+  # ---- legibility: the x-height thresholds ------------------------------
+  - id: r1_font_too_small_large_pack
+    when:
+      all_of:
+        - {field: package_area_cm2, op: ">=", value: 80}
+        - {field: x_height_mm, op: "<", value: 1.2}
+    then: {verdict: fail, reason_code: XHEIGHT_BELOW_1_2MM, cite: [c_font_12]}
+    require_fields: [x_height_mm, package_area_cm2]
+  - id: r2_font_too_small_small_pack
+    when:
+      all_of:
+        - {field: package_area_cm2, op: "<", value: 80}
+        - {field: x_height_mm, op: "<", value: 0.9}
+    then: {verdict: fail, reason_code: XHEIGHT_BELOW_0_9MM_SMALL_PACK, cite: [c_font_09]}
+    require_fields: [x_height_mm, package_area_cm2]
+    note: |
+      The FSAI's FAQ page states this figure as "0.9 cm" while its General
+      Labelling page states "0.9 mm". Annex IV to the Regulation says 0.9 mm, so
+      0.9 mm is used; the discrepancy is recorded in the corpus file rather than
+      smoothed over.
+  # ---- mandatory particulars -------------------------------------------
+  - id: r3_missing_mandatory_particular
+    when:
+      any_of:
+        - {field: fields.name, op: "!=", value: true}
+        - {field: fields.ingredients_list, op: "!=", value: true}
+        - {field: fields.quantity_of_ingredients, op: "!=", value: true}
+        - {field: fields.net_quantity, op: "!=", value: true}
+        - {field: fields.date_mark, op: "!=", value: true}
+        - {field: fields.storage_conditions, op: "!=", value: true}
+        - {field: fields.fbo_name_address, op: "!=", value: true}
+        - {field: fields.country_of_origin, op: "!=", value: true}
+        - {field: fields.instructions_for_use, op: "!=", value: true}
+        - {field: fields.nutrition_declaration, op: "!=", value: true}
+    then: {verdict: fail, reason_code: MANDATORY_PARTICULAR_MISSING, cite: [c_mand_a_l]}
+    require_fields: [fields.name, fields.ingredients_list, fields.net_quantity, fields.date_mark, fields.nutrition_declaration]
+    note: |
+      Only five of the ten bits are required to be present before this rule is
+      evaluated. The other five are checked when recorded, but their absence means
+      the table does not say either way -- which is a MISSING_FIELD review, not a
+      finding of non-compliance.
+  - id: r4_allergens_not_emphasised
+    when: {field: allergens_emphasised, op: "==", value: false}
+    then: {verdict: fail, reason_code: ALLERGENS_NOT_EMPHASISED, cite: [c_allergen_emphasis]}
+    require_fields: [allergens_emphasised]
+  - id: r5_allergen_key_outside_annex_ii
+    when:
+      not:
+        field: allergens_declared
+        op: subset_of
+        value: [celery, cereals_containing_gluten, crustaceans, eggs, fish, lupin, milk, molluscs, mustard, nuts, peanuts, sesame_seeds, soybeans, sulphur_dioxide_and_sulphites]
+    then: {verdict: review, reason_code: ALLERGEN_KEY_NOT_MAPPABLE, cite: [c_allergens_14]}
+    require_fields: [allergens_declared]
+    note: |
+      A declared key outside this vocabulary is not a breach: it may be voluntary
+      information, a spelling variant, or a language difference. It escalates to a
+      human rather than failing.
+
+      `subset_of` means every declared key appears in the list. `in` / `not_in`
+      cannot express this because they take a scalar on the left: passing the array
+      itself is a TYPE_ERROR, so the rule would never fire while looking cautious.
+      An empty declaration is a subset of everything, so "no allergens declared" is
+      not reported as an unmappable key.
+  - id: r6_alcohol_strength_required
+    when:
+      all_of:
+        - {field: alcohol_by_volume_pct, op: ">", value: 1.2}
+        - {field: fields.alcohol_strength, op: "!=", value: true}
+    then: {verdict: fail, reason_code: ALCOHOL_STRENGTH_NOT_DECLARED, cite: [c_mand_a_l]}
+    require_fields: [alcohol_by_volume_pct, fields.alcohol_strength]
+  - id: r7_same_field_of_vision
+    when:
+      any_of:
+        - {field: vision.name, op: "!=", value: {ref: vision.net_quantity}}
+        - {field: vision.name, op: "!=", value: {ref: vision.alcohol_strength}}
+    then: {verdict: fail, reason_code: NOT_SAME_FIELD_OF_VISION, cite: [c_field_of_vision]}
+    require_fields: [vision.name, vision.net_quantity, vision.alcohol_strength]
+    note: |
+      The three values are field-of-vision group identifiers: equal means the same
+      view. The footnote in the cited text exempts the date mark from this rule
+      under the current rules, so the date mark is deliberately not compared here.
+  # ---- the pass rule ---------------------------------------------------
+  - id: r8_label_within_guidance
+    when:
+      all_of:
+        - {field: x_height_mm, op: "exists"}
+        - {field: package_area_cm2, op: "exists"}
+        - {field: allergens_emphasised, op: "==", value: true}
+        - {field: sku, op: "exists"}
+    then: {verdict: pass, reason_code: NO_GUIDANCE_DEPARTURE, cite: [c_mand_a_l, c_font_12]}
+    require_fields: [x_height_mm, package_area_cm2, allergens_emphasised, sku]
+    note: |
+      Written out explicitly rather than left to aggregation, so that a later change
+      to the aggregation rule cannot silently turn "nothing matched" into a pass.
+notes:
+  - >-
+    This pack reports differences from published guidance. It is not a legal
+    opinion and does not certify a label.
+  - >-
+    Every rule cites at least one entry in citations, and every citation resolves
+    character-for-character against a file in corpus.
+  - >-
+    Scope is deliberately narrower than the design draft: see GAPS.md for the
+    rules that were left out and what would close each one.

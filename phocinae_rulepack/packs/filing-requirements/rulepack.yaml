@@ -1,0 +1,233 @@
+schema: phocinae-rulepack/v1
+id: filing-requirements
+title: 法院立案材料要件审查（民事一审）
+version: 0.1.1
+scenario: L10
+description: |
+  读一份立案材料清单，对一版要件表，输出缺项与不符项供人复核。
+  不作法律结论、不判断是否应当受理与不予受理。
+  依据：法释〔2015〕8 号，逐字语料见 sources/fa_shi_2015_8_excerpt.md。
+
+  证据等级全部为 derived：语料取自法院官网转载版本，属权威转录，
+  不是全国人大法规库原件。validate 会逐条提示这一点。
+
+  核心口径：要件缺失 → review。依据第七条「应当一次性书面告知在指定期限内补正」
+  ——缺项对应的动作是告知补正，不是不予受理，所以本 pack 不判 fail。
+  份数不足 → fail：第六条(四)要求副本人数相符，这是记录值本身不符合。
+missing_field_policy: review
+input_schema:
+  type: object
+  required: [case, complaint]
+  properties:
+    case:
+      type: object
+      properties:
+        type: {type: string}
+        court: {type: string}
+    complaint:
+      type: object
+      properties:
+        present: {type: boolean}
+        plaintiff_identity_complete: {type: boolean}
+        defendant_identity_complete: {type: boolean}
+        claims_and_facts: {type: boolean}
+        evidence_and_sources: {type: boolean}
+        witness_details_required: {type: boolean}
+        witness_details_present: {type: boolean}
+        copies_submitted: {type: number}
+        defendants_count: {type: number}
+        attachments:
+          type: object
+          properties:
+            identity_proof: {type: boolean}
+            authority_of_agent: {type: boolean}
+            service_address_for_defendant: {type: boolean}
+            evidence_materials: {type: boolean}
+enum_domains:
+  case.type: [civil_first_instance, administrative_first_instance, criminal_self_prosecution, other]
+corpus:
+  - path: sources/fa_shi_2015_8_excerpt.md
+    role: authority
+    title: 最高人民法院关于人民法院登记立案若干问题的规定（节选）
+    sha256: 0B4D108CEB3FBCA9BDC6D14E76ED48D83DE01B3AF51B5537A3D1B1D1D2B52CB5
+    url: http://htzy.nmgfy.gov.cn/article/detail/2015/04/id/1600350.shtml
+    retrieved: "2026-10-14"
+citations:
+  - id: c_art1
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第一条
+    quote: "人民法院对依法应该受理的一审民事起诉、行政起诉和刑事自诉，实行立案登记制。"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条
+    quote: "民事起诉状应当记明以下事项："
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4_1
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条(一)
+    quote: "（一）原告的姓名、性别、年龄、民族、职业、工作单位、住所、联系方式，法人或者其他组织的名称、住所和法定代表人或者主要负责人的姓名、职务、联系方式；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4_2
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条(二)
+    quote: "（二）被告的姓名、性别、工作单位、住所等信息，法人或者其他组织的名称、住所等信息；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4_3
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条(三)
+    quote: "（三）诉讼请求和所根据的事实与理由；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4_4
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条(四)
+    quote: "（四）证据和证据来源；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art4_5
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第四条(五)
+    quote: "（五）有证人的，载明证人姓名和住所。"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条
+    quote: "当事人提出起诉、自诉的，应当提交以下材料："
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6_1
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条(一)
+    quote: "（一）起诉人、自诉人是自然人的，提交身份证明复印件；起诉人、自诉人是法人或者其他组织的，提交营业执照或者组织机构代码证复印件、法定代表人或者主要负责人身份证明书；法人或者其他组织不能提供组织机构代码的，应当提供组织机构被注销的情况说明；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6_2
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条(二)
+    quote: "（二）委托起诉或者代为告诉的，应当提交授权委托书、代理人身份证明、代为告诉人身份证明等相关材料；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6_3
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条(三)
+    quote: "（三）具体明确的足以使被告或者被告人与他人相区别的姓名或者名称、住所等信息；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6_4
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条(四)
+    quote: "（四）起诉状原本和与被告或者被告人及其他当事人人数相符的副本；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art6_5
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第六条(五)
+    quote: "（五）与诉请相关的证据或者证明材料。"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art7
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第七条
+    quote: "当事人提交的诉状和材料不符合要求的，人民法院应当一次性书面告知在指定期限内补正。"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+  - id: c_art8
+    source: 法释〔2015〕8号（最高人民法院关于人民法院登记立案若干问题的规定）
+    locator: 第八条(一)
+    quote: "(一)对民事、行政起诉，应当在收到起诉状之日起七日内决定是否立案；"
+    document: sources/fa_shi_2015_8_excerpt.md
+    evidence_level: derived
+rules:
+  # ---- out of scope -----------------------------------------------------
+  - id: r1_out_of_scope_case_type
+    when:
+      not:
+        field: case.type
+        op: in
+        value: [civil_first_instance, administrative_first_instance, criminal_self_prosecution]
+    then: {verdict: review, reason_code: OUT_OF_SCOPE_CASE_TYPE, cite: [c_art1]}
+    require_fields: [case.type]
+    note: 本 pack 覆盖第一条列明的三类一审；其余案件类型转人工。
+  # ---- missing items escalate, they do not fail --------------------------
+  - id: r2_complaint_absent
+    when: {field: complaint.present, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art6]}
+    require_fields: [complaint.present]
+  - id: r3_plaintiff_identity_incomplete
+    when: {field: complaint.plaintiff_identity_complete, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art4_1]}
+    require_fields: [complaint.plaintiff_identity_complete]
+  - id: r4_defendant_identity_incomplete
+    when: {field: complaint.defendant_identity_complete, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art4_2]}
+    require_fields: [complaint.defendant_identity_complete]
+  - id: r5_claims_and_facts_absent
+    when: {field: complaint.claims_and_facts, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art4_3]}
+    require_fields: [complaint.claims_and_facts]
+  - id: r6_evidence_sources_absent
+    when: {field: complaint.evidence_and_sources, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art4_4]}
+    require_fields: [complaint.evidence_and_sources]
+  - id: r7_witness_named_but_details_absent
+    when:
+      all_of:
+        - {field: complaint.witness_details_required, op: "==", value: true}
+        - {field: complaint.witness_details_present, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art4_5]}
+    require_fields: [complaint.witness_details_required, complaint.witness_details_present]
+  - id: r8_identity_proof_absent
+    when: {field: complaint.attachments.identity_proof, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art6_1]}
+    require_fields: [complaint.attachments.identity_proof]
+  - id: r9_authority_of_agent_absent
+    when: {field: complaint.attachments.authority_of_agent, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art6_2]}
+    require_fields: [complaint.attachments.authority_of_agent]
+    note: 该项只在委托起诉或代为告诉时才是要件；未委托时把本字段记为 true。
+  - id: r10_defendant_address_absent
+    when: {field: complaint.attachments.service_address_for_defendant, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art6_3]}
+    require_fields: [complaint.attachments.service_address_for_defendant]
+  - id: r11_evidence_materials_absent
+    when: {field: complaint.attachments.evidence_materials, op: "!=", value: true}
+    then: {verdict: review, reason_code: MISSING_REQUIRED_ITEM, cite: [c_art6_5]}
+    require_fields: [complaint.attachments.evidence_materials]
+  # ---- the one deterministic failure: copies must match the party count --
+  - id: r12_copies_fewer_than_defendants
+    when: {field: complaint.copies_submitted, op: "<", value: {ref: complaint.defendants_count}}
+    then: {verdict: fail, reason_code: COPIES_FEWER_THAN_DEFENDANTS, cite: [c_art6_4]}
+    require_fields: [complaint.copies_submitted, complaint.defendants_count]
+    note: |
+      第六条(四)要求「起诉状原本和与被告或者被告人及其他当事人人数相符的副本」。
+      份数不足是记录值本身不符合要求，不是「没记录」，所以判 fail 而不是 review。
+      本 pack 只有这一条规则用字段间比较 {"ref": ...}。
+  # ---- the pass rule ----------------------------------------------------
+  - id: r13_requirements_present
+    when:
+      all_of:
+        - {field: complaint.present, op: "==", value: true}
+        - {field: complaint.plaintiff_identity_complete, op: "==", value: true}
+        - {field: complaint.defendant_identity_complete, op: "==", value: true}
+        - {field: complaint.claims_and_facts, op: "==", value: true}
+        - {field: complaint.evidence_and_sources, op: "==", value: true}
+        - {field: complaint.attachments.identity_proof, op: "==", value: true}
+        - {field: complaint.attachments.evidence_materials, op: "==", value: true}
+    then: {verdict: pass, reason_code: NO_REQUIREMENT_GAP, cite: [c_art6, c_art7]}
+    require_fields: [complaint.present, complaint.plaintiff_identity_complete, complaint.defendant_identity_complete, complaint.claims_and_facts, complaint.evidence_and_sources, complaint.attachments.identity_proof, complaint.attachments.evidence_materials]
+    note: |
+      逐条写出「要件齐备」而不是依赖聚合，以免日后聚合语义变化时静默放行。
+      只在要件层面判定；本 pack 不对是否应当受理发表意见。
+notes:
+  - >-
+    本 pack 只输出差异供人复核，不是法律意见，不判断是否应当受理、
+    不予受理或不予立案。
+  - >-
+    「要件缺失判 review」是刻意的：第七条的补正告知才是缺项对应的动作。
+    只有份数不足这种记录值本身不合规的情形才判 fail。

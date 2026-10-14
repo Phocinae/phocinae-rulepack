@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -568,7 +569,13 @@ def test_packaging_and_hygiene(suite: Suite):
     import phocinae_rulepack
 
     version = phocinae_rulepack.__version__
-    suite.equal("G1 __version__ is 0.1.0", version, "0.1.0")
+    # Asserted against pyproject rather than against a literal, so a version bump
+    # is not a test failure. The failure this guards against is the two drifting
+    # apart -- which is a real defect this project's family has shipped before --
+    # not the bump itself.
+    suite.equal("G1 the version is a semver triple", version.count("."), 2)
+    suite.check("G1b the version looks like a release", re.match(r"^\d+\.\d+\.\d+$", version) is not None,
+                "got %r" % version)
 
     pyproject = open(os.path.join(REPO, "pyproject.toml"), "r", encoding="utf-8").read()
     suite.is_true(

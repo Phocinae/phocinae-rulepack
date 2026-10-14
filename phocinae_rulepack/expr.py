@@ -29,7 +29,8 @@ import re
 
 from .errors import PackError, E_EXPR
 
-LEAF_OPS = ("==", "!=", "<", "<=", ">", ">=", "in", "not_in", "matches", "exists", "missing")
+LEAF_OPS = ("==", "!=", "<", "<=", ">", ">=", "in", "not_in", "matches", "exists",
+            "missing", "subset_of")
 COMBINATORS = ("all_of", "any_of", "not")
 
 #: Numeric-vs-numeric comparison is fine; bool is an int subclass in Python, so
@@ -159,7 +160,7 @@ def compile_condition(node, where):
         ref = value["ref"]
         if not isinstance(ref, str) or not ref:
             raise PackError(E_EXPR, "%s: 'ref' must be a non-empty string" % where)
-    elif op in ("in", "not_in"):
+    elif op in ("in", "not_in", "subset_of"):
         if not isinstance(value, list):
             raise PackError(E_EXPR, "%s: %r needs a list value" % (where, op))
     elif isinstance(value, (list, tuple)):
@@ -286,6 +287,37 @@ def evaluate(condition, document):
             )
         expected = ref_value
 
+    if condition.op == "subset_of":
+        # Every element of the field's array must appear in the given list.
+        # `in` / `not_in` take a scalar on the left, so they cannot express this:
+        # passing the array itself is a TYPE_ERROR, which is exactly how a rule
+        # ends up never firing while looking cautious.
+        if not isinstance(expected, list):
+            return _unknown(
+                "TYPE_ERROR",
+                "%s: 'subset_of' needs a list to compare against" % condition.path,
+            )
+        if not isinstance(actual, list):
+            return _unknown(
+                "TYPE_ERROR",
+                "%s: field %r is %s, not a list, so it cannot be a subset"
+                % (condition.path, condition.field, _kind_name(actual)),
+            )
+        for element in actual:
+            if isinstance(element, (list, dict)):
+                return _unknown(
+                    "TYPE_ERROR",
+                    "%s: field %r contains a %s, which cannot be compared"
+                    % (condition.path, condition.field, _kind_name(element)),
+                )
+            if not any(_same_kind(element, candidate) and element == candidate
+                       for candidate in expected):
+                return _FALSE
+        # An empty array is a subset of everything. That is the mathematically
+        # correct reading, and it is also the safe one here: "no allergens
+        # declared" should not be reported as "an allergen outside the list".
+        return _TRUE
+
     if condition.op in ("in", "not_in"):
         if not isinstance(expected, list):
             return _unknown(
@@ -295,8 +327,8 @@ def evaluate(condition, document):
         if isinstance(actual, (list, dict)):
             return _unknown(
                 "TYPE_ERROR",
-                "%s: field %r is a %s, not a scalar"
-                % (condition.path, condition.field, type(actual).__name__),
+                "%s: field %r is a %s; use 'subset_of' to test an array against a list"
+                % (condition.path, condition.field, _kind_name(actual)),
             )
         hit = any(_same_kind(actual, candidate) and actual == candidate for candidate in expected)
         return _TRUE if (hit if condition.op == "in" else not hit) else _FALSE

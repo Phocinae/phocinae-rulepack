@@ -35,11 +35,22 @@ jobs:
         run: |
           python -m pip install "PyYAML>=6.0"
           python tests/run_all.py
+      # Pack behaviour, not just pack validity: a pack can validate cleanly and
+      # still never fire. The first version of eu-label's allergen rule compared
+      # an array for list membership, which the engine reports as TYPE_ERROR --
+      # the rule could not fire, and it looked like caution rather than a bug.
+      - name: Pack behaviour (filing-requirements, eu-label)
+        env:
+          PYTHONUTF8: "1"
+        run: python tests/test_packs.py
+
       - name: Validate the shipped packs strictly
         env:
           PYTHONUTF8: "1"
         run: |
-          python -m phocinae_rulepack validate expense-policy --strict
+          for pack in expense-policy eu-label filing-requirements; do
+            python -m phocinae_rulepack validate "$pack" --strict
+          done
       - name: The declared Python floor must actually work
         if: matrix.python == '3.10'
         env:

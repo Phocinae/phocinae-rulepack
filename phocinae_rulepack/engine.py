@@ -154,6 +154,20 @@ def check(pack, document):
     else:
         verdict = _strictest([entry["verdict"] for entry in reasons])
 
+        # A `pass` reason beside a `fail` or `review` reason is a contradiction:
+        # the pack reports both "no departure found" and a departure. Drop the
+        # pass entries whenever something stricter fired.
+        #
+        # This is the engine's job, not the pack author's. Expressing it as an
+        # extra condition on every pass rule would have to be repeated in every
+        # pack and would be wrong the first time someone forgot; and a pack cannot
+        # reliably express "no other rule fired" in the first place. Doing it here
+        # also makes the invariant hold for packs written before this change.
+        if verdict != "pass":
+            filtered = [entry for entry in reasons if entry["verdict"] != "pass"]
+            if filtered:
+                reasons = filtered
+
     unmatched = sorted(
         path for path in present if path not in touched and not path.startswith(_SILENT_PREFIXES)
     )

@@ -38,7 +38,7 @@ If you want the measurement harness rather than the kernel, see
 ## Install
 
 ```sh
-pip install phocinae-rulepack==0.1.0
+pip install phocinae-rulepack==0.1.1
 ```
 
 Python 3.9 or newer. No dependencies. Nothing in this package opens a socket.
@@ -161,12 +161,47 @@ note: "text with a \": \" colon inside"  # right: quote it, or use a block scala
 
 ## What ships
 
-| pack | scenario | rules |
-|---|---|---|
-| `expense-policy` | S15 (the expense pre-approval demo) | 8 |
+| pack | scenario | rules | citations | evidence level |
+|---|---|---|---|---|
+| `expense-policy` | S15 (the expense pre-approval demo) | 8 | 5 | all `verbatim` |
+| `eu-label` | XC7 (food label compliance, Ireland) | 8 | 6 | all `derived` |
+| `filing-requirements` | L10 (court filing requirements, civil first instance) | 13 | 15 | all `derived` |
 
 > Naming note: "S15" here is the gallery's S15 expense demo. In the 182-scenario
 > inventory S15 is something else (multilingual low-resource expansion).
+
+### Where each pack's text comes from
+
+**`expense-policy`** quotes the policy constants and the rule function of the
+measurement script that produced the S15 battery, byte for byte. Everything is
+`verbatim`.
+
+**`eu-label`** quotes the Food Safety Authority of Ireland's published guidance on
+Regulation (EU) No. 1169/2011. The FSAI advises on the Regulation; these are the
+authority's words, not the instrument's own text, so every citation is `derived`
+and `validate` says so on each run. `GAPS.md` in the pack directory lists the
+rules the design draft carried but this release does not, and what would close
+each one.
+
+Two corrections were made to the design draft's citations after fetching the live
+pages: the draft's allergen-list entry reads `11. ***Sesame seeds*** and products
+thereof` while the page reads `11. Sesame seeds and products thereof`; and the
+draft attributes the small-package x-height of `0.9 mm` to the FSAI's FAQ page,
+which actually states `0.9 cm`. The `0.9 mm` figure is taken from the FSAI's
+General Labelling page, which matches Annex IV to the Regulation. Both figures and
+the disagreement are recorded in `sources/fsai_legibility.md` rather than smoothed
+over.
+
+**`filing-requirements`** quotes 法释〔2015〕8号 (最高人民法院关于人民法院登记立案
+若干问题的规定) as republished on a court website. A re-publication rather than the
+legislature's own database, so every citation is `derived`. Its citations were
+checked against the fetched text and the design draft's quotes all matched.
+
+Scope note for `filing-requirements`: a missing item escalates to `review`, never
+to `fail`. Article 7 makes the remedy a one-time written notice to supplement, so
+"something is missing" is not the same fact as "something is wrong". Only the copy
+count — which Article 6(4) requires to match the number of defendants — can fail,
+because there the recorded value itself is non-compliant.
 
 ## Testing
 
