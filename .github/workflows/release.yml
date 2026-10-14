@@ -73,7 +73,18 @@ jobs:
         with:
           name: distributions
           path: dist-upload
-      - name: Publish (OIDC trusted publishing; falls back to a token if configured)
+
+      # This job fails until a trusted publisher is configured for this project
+      # on PyPI (Project → Publishing → Add a new pending publisher: owner
+      # `Phocinae`, repository `phocinae-rulepack`, workflow `release.yml`,
+      # environment `pypi`). PyPI has no API for that setting, so it cannot be
+      # done from here and no token is stored in this repository.
+      #
+      # The failure is immediate and names the page to visit. Versions 0.1.0,
+      # 0.1.1 and 0.1.2 were uploaded with `twine` and a token instead; that path
+      # stays available, and `skip-existing` makes this job idempotent on a
+      # version that is already published.
+      - name: Publish (requires a configured PyPI trusted publisher)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist-upload

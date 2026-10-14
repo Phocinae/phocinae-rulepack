@@ -44,7 +44,13 @@ jobs:
           PYTHONUTF8: "1"
         run: python tests/test_packs.py
 
+      # `shell: bash` is required for the loop below: a Windows runner's default
+      # is PowerShell, which cannot parse `for ... do ... done`. The step failed on
+      # windows-latest in every matrix cell until this was added, while the test
+      # suites above passed there -- so the failure was in this step's syntax, not
+      # in the packs.
       - name: Validate the shipped packs strictly
+        shell: bash
         env:
           PYTHONUTF8: "1"
         run: |
