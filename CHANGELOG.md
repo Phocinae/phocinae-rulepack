@@ -190,7 +190,7 @@ unavailable` the engine caps the verdict to `review`, so the rule could never
 fail. `phocinae_rulepack/packs/eu-label/GAPS.md` lists each omission and what
 would close it.
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-10-14
 
 First release. The deterministic rule-pack engine, with one shipped pack.
 
